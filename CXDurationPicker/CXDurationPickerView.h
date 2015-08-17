@@ -36,6 +36,10 @@
    didSelectDateInPast:(CXDurationPickerDate)date
                forMode:(CXDurationPickerMode)mode;
 
+- (void)durationPicker:(CXDurationPickerView *)durationPicker
+   didSelectDateInFuture:(CXDurationPickerDate)date
+               forMode:(CXDurationPickerMode)mode;
+
 @end
 
 @interface CXDurationPickerView : UIView <CXDurationPickerMonthViewDelegate, UITableViewDataSource, UITableViewDelegate>
@@ -47,7 +51,7 @@
 @property (nonatomic) CXDurationPickerMode mode;
 @property (nonatomic) CXDurationPickerType type;    
 @property (nonatomic) BOOL allowSelectionsInPast;
-
+@property (nonatomic) BOOL allowSelectionsInFuture;
 // Month-specific colors
 //
 @property (strong, nonatomic) UIColor *dayLabelColor;

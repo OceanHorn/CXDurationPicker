@@ -49,7 +49,9 @@
 //
 //    [self.picker setStartPickerDate:d withDuration:5];
     
-    self.picker.allowSelectionsInPast = YES;
+    self.picker.allowSelectionsInPast = NO;
+    // default is YES.
+    self.picker.allowSelectionsInFuture = YES;
     
     [self synchronizeComponents];
 }
@@ -126,6 +128,13 @@ invalidEndDateSelected:(CXDurationPickerDate)date {
                forMode:(CXDurationPickerMode)mode {
     
     NSLog(@"Date was selected in the past. Ignoring.");
+}
+
+- (void)durationPicker:(CXDurationPickerView *)durationPicker
+   didSelectDateInFuture:(CXDurationPickerDate)date
+               forMode:(CXDurationPickerMode)mode {
+    
+    NSLog(@"Date was selected in the future. Ignoring.");
 }
 
 #pragma mark - Segmented Mode Switcher

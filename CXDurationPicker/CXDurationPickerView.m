@@ -54,6 +54,7 @@
     self.transitForegroundColor = [UIColor defaultTransitForegroundColor];
     
     self.allowSelectionsInPast = NO;
+    self.allowSelectionsInFuture = YES;
     self.startDate = (CXDurationPickerDate) { 0, 0, 0 };
     self.endDate = (CXDurationPickerDate) { 0, 0, 0 };
     
@@ -174,13 +175,23 @@
 
 - (void)monthView:(CXDurationPickerMonthView *)view daySelected:(CXDurationPickerDayView *)dayView {
     
-    // Did user select a date before "today"? If so, is this allowed?
+    
     //
     if (self.mode == CXDurationPickerModeStartDate) {
+        // Did user select a date before "today"? If so, is this allowed?
         if ([self isPickerDateInPast:dayView.pickerDate]) {
             if (!self.allowSelectionsInPast) {
                 if ([self.delegate respondsToSelector:@selector(durationPicker:didSelectDateInPast:forMode:)]) {
                     [self.delegate durationPicker:self didSelectDateInPast:dayView.pickerDate forMode:_mode];
+                }
+                return;
+            }
+            
+        } // Did user select a date after "today"? If so, is this allowed?
+        else if ([self isPickerDateInFuture:dayView.pickerDate]) {
+            if (!self.allowSelectionsInFuture) {
+                if ([self.delegate respondsToSelector:@selector(durationPicker:didSelectDateInFuture:forMode:)]) {
+                    [self.delegate durationPicker:self didSelectDateInFuture:dayView.pickerDate forMode:_mode];
                 }
                 return;
             }
@@ -193,12 +204,26 @@
                 }
                 return;
             }
+        } else if ([self isPickerDateInFuture:dayView.pickerDate]) {
+            if (!self.allowSelectionsInFuture) {
+                if ([self.delegate respondsToSelector:@selector(durationPicker:didSelectDateInFuture:forMode:)]) {
+                    [self.delegate durationPicker:self didSelectDateInFuture:dayView.pickerDate forMode:_mode];
+                }
+                return;
+            }
         }
     } else if (self.mode == CXDurationPickerModeSingleDate) {
         if ([self isPickerDateInPast:dayView.pickerDate]) {
             if (!self.allowSelectionsInPast) {
                 if ([self.delegate respondsToSelector:@selector(durationPicker:didSelectDateInPast:forMode:)]) {
                     [self.delegate durationPicker:self didSelectDateInPast:dayView.pickerDate forMode:_mode];
+                }
+                return;
+            }
+        }else if ([self isPickerDateInFuture:dayView.pickerDate]) {
+            if (!self.allowSelectionsInFuture) {
+                if ([self.delegate respondsToSelector:@selector(durationPicker:didSelectDateInFuture:forMode:)]) {
+                    [self.delegate durationPicker:self didSelectDateInFuture:dayView.pickerDate forMode:_mode];
                 }
                 return;
             }
@@ -371,6 +396,16 @@
     // Convert back to our convenience model.
     //
     CXDurationPickerDate newEndDate = [CXDurationPickerUtils pickerDateFromDate:n2];
+    
+    if ([self isPickerDateInFuture:newEndDate] && !self.allowSelectionsInFuture) {
+        NSMutableDictionary *details = [NSMutableDictionary dictionary];
+        
+        [details setValue:@"Unable to set start date in the future." forKey:NSLocalizedDescriptionKey];
+        
+        *error = [NSError errorWithDomain:@"CXDurationPicker" code:101 userInfo:details];
+        
+        return NO;
+    }
     
     _startDate.day = pickerDate.day;
     _startDate.month = pickerDate.month;
@@ -595,6 +630,19 @@
     return NO;
 }
 
+- (BOOL)isPickerDateInFuture:(CXDurationPickerDate)pickerDate {
+    NSDate *today = [CXDurationPickerUtils today];
+    NSDate *date = [CXDurationPickerUtils dateFromPickerDate:pickerDate];
+    
+    NSTimeInterval interval = [date timeIntervalSinceDate:today];
+    
+    if (interval > 0) {
+        return YES;
+    }
+    
+    return NO;
+}
+
 - (BOOL)isDurationValidForStartPickerDate:(CXDurationPickerDate)startPickerDate
                          andEndPickerDate:(CXDurationPickerDate)endPickerDate {
     
@@ -699,7 +747,8 @@
     NSDate *todayDate = [NSDate date];
     
     NSDateComponents *components = [NSDateComponents new];
-    components.day = 2;
+    components.day = 0;
+//    components.day = 2;
     //components.month = 1;
     
     NSDate *tomorrowDate = [calendar dateByAddingComponents:components toDate:todayDate options:0];
